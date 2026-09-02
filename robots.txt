@@ -2,7 +2,7 @@ User-agent: *
 Allow: /
 Disallow: 
 
-Sitemap: https://bladessamurai.com/sitemap.xml
+Sitemap: https://blade-samurai.vercel.app/sitemap.xml
 
 # Crawl delay to be respectful to server resources
 Crawl-delay: 1
