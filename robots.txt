@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: 
+
+Sitemap: https://bladessamurai.com/sitemap.xml
+
+# Crawl delay to be respectful to server resources
+Crawl-delay: 1

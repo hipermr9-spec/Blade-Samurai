@@ -1,0 +1,625 @@
+/* ---------- Base ---------- */
+:root {
+  --font-heading: 'Space Grotesk', 'Segoe UI', sans-serif;
+  --font-body: 'Inter', 'Segoe UI', sans-serif;
+  --radius: 14px;
+  --radius-sm: 10px;
+  --transition: 0.2s ease;
+  --content-width: 1080px;
+}
+
+* { box-sizing: border-box; }
+
+html, body { 
+  margin: 0; 
+  padding: 0; 
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg-body);
+  color: var(--text-primary);
+  line-height: 1.6;
+  transition: background-color var(--transition), color var(--transition);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+}
+
+h1 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 2rem;
+  margin: 0 0 16px;
+  line-height: 1.2;
+}
+
+h2 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 1.6rem;
+  margin: 0 0 12px;
+  line-height: 1.2;
+}
+
+p {
+  margin: 0;
+  max-width: 62ch;
+  color: var(--text-secondary);
+  word-break: break-word;
+}
+
+a { 
+  color: inherit;
+  transition: color var(--transition);
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+button {
+  font-family: inherit;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+  html { scroll-behavior: auto; }
+}
+
+/* ---------- Navbar ---------- */
+.navbar {
+  background: var(--bg-navbar);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  transition: background-color var(--transition), border-color var(--transition);
+}
+
+.navbar-inner {
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text-primary);
+}
+
+.navbar-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.navbar-title {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 1.05rem;
+  white-space: nowrap;
+}
+
+.navbar-links {
+  display: flex;
+  gap: 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.navbar-links a {
+  text-decoration: none;
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: color var(--transition);
+}
+
+.navbar-links a:hover,
+.navbar-links a:focus-visible { 
+  color: var(--accent); 
+}
+
+.navbar-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.control-btn {
+  font-family: var(--font-body);
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: none;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: background-color var(--transition), color var(--transition);
+}
+
+.control-btn:hover {
+  background: var(--accent);
+  color: var(--text-on-accent);
+}
+
+.icon-btn { 
+  padding: 8px 12px; 
+}
+
+/* ---------- Hamburger Menu ---------- */
+.menu-toggle {
+  display: none;
+  flex-direction: column;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  gap: 5px;
+}
+
+.hamburger {
+  width: 24px;
+  height: 2px;
+  background: var(--text-primary);
+  border-radius: 2px;
+  transition: all var(--transition);
+  display: block;
+}
+
+.hamburger::before,
+.hamburger::after {
+  content: '';
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: var(--text-primary);
+  border-radius: 2px;
+  transition: all var(--transition);
+}
+
+.menu-toggle[aria-expanded="true"] .hamburger {
+  background: transparent;
+}
+
+.menu-toggle[aria-expanded="true"] .hamburger::before {
+  transform: rotate(45deg) translate(8px, 8px);
+}
+
+.menu-toggle[aria-expanded="true"] .hamburger::after {
+  transform: rotate(-45deg) translate(7px, -7px);
+}
+
+/* ---------- Mobile Menu ---------- */
+.navbar-links.mobile-open {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--bg-navbar);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 24px;
+  gap: 12px;
+  z-index: 999;
+}
+
+.navbar-links.mobile-open a {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.navbar-links.mobile-open a:last-child {
+  border-bottom: none;
+}
+
+/* ---------- Shared panel look ---------- */
+.panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  transition: background-color var(--transition), border-color var(--transition);
+}
+
+/* ---------- Hero: icon + about ---------- */
+.hero {
+  max-width: var(--content-width);
+  margin: 40px auto;
+  padding: 0 24px;
+  display: grid;
+  grid-template-columns: 1fr 1.8fr;
+  gap: 24px;
+  align-items: center;
+}
+
+.icon-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.server-icon-img {
+  width: 120px;
+  height: 120px;
+  border-radius: 20px;
+  object-fit: cover;
+  box-shadow: 0 8px 20px var(--shadow);
+  flex-shrink: 0;
+}
+
+.about-panel h1, 
+.about-panel h2, 
+.join-panel h2 { 
+  color: var(--text-primary); 
+}
+
+/* ---------- Join: badge + card ---------- */
+.join {
+  max-width: 640px;
+  margin: 0 auto 48px 24px;
+  padding: 0 24px;
+  display: flex;
+  align-items: flex-start;
+  position: relative;
+  gap: 24px;
+}
+
+.join-badge {
+  width: 72px;
+  height: 72px;
+  min-width: 72px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  border: 3px solid var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-top: 36px;
+  margin-right: -36px;
+  z-index: 2;
+  box-shadow: 0 6px 16px var(--shadow);
+  transition: background-color var(--transition), border-color var(--transition);
+  flex-shrink: 0;
+}
+
+.join-badge img {
+  width: 60%;
+  height: 60%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.join-panel {
+  flex: 1;
+  padding-left: 52px;
+}
+
+.btn-primary {
+  display: inline-block;
+  margin-top: 18px;
+  background: var(--accent);
+  color: var(--text-on-accent);
+  text-decoration: none;
+  font-weight: 600;
+  padding: 12px 26px;
+  border-radius: var(--radius-sm);
+  transition: background-color var(--transition);
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary:hover,
+.btn-primary:focus-visible { 
+  background: var(--accent-hover); 
+}
+
+/* ---------- Description band ---------- */
+.description-band {
+  background: var(--bg-band);
+  padding: 48px 24px;
+  transition: background-color var(--transition);
+}
+
+.description-inner {
+  max-width: var(--content-width);
+  margin: 0 auto;
+}
+
+.description-inner h2 { 
+  color: var(--text-primary); 
+}
+
+/* ---------- Footer ---------- */
+.footer {
+  background: var(--bg-footer);
+  border-top: 1px solid var(--border);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 0.9rem;
+  transition: background-color var(--transition), border-color var(--transition);
+  margin-top: auto;
+}
+
+.footer-link {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-sm);
+  padding: 4px;
+}
+
+.footer-link:hover,
+.footer-link:focus-visible { 
+  text-decoration: underline; 
+}
+
+.footer-links {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.footer-discord-icon {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+}
+
+.footer-roblox-icon {
+  width: 25px;
+  height: 25px;
+  object-fit: contain;
+}
+
+.footer-text, 
+.footer-copyright { 
+  color: var(--text-secondary); 
+}
+
+/* ---------- RTL (Arabic) mirroring ---------- */
+[dir="rtl"] .join {
+  margin: 0 24px 48px auto;
+}
+
+[dir="rtl"] .join-badge {
+  margin-right: 0;
+  margin-left: -36px;
+}
+
+[dir="rtl"] .join-panel {
+  padding-left: 0;
+  padding-right: 52px;
+}
+
+[dir="rtl"] .hero {
+  direction: rtl;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+  .hero {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .icon-panel {
+    order: -1;
+    min-height: 160px;
+  }
+}
+
+@media (max-width: 768px) {
+  h1 {
+    font-size: 1.6rem;
+  }
+
+  h2 {
+    font-size: 1.3rem;
+  }
+
+  .navbar-inner {
+    padding: 12px 16px;
+    gap: 16px;
+  }
+
+  .navbar-title {
+    font-size: 0.95rem;
+  }
+
+  .navbar-links {
+    display: none;
+  }
+
+  .menu-toggle {
+    display: flex;
+  }
+
+  .control-btn {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+
+  .icon-panel { 
+    min-height: 140px; 
+  }
+
+  .server-icon-img {
+    width: 100px;
+    height: 100px;
+  }
+
+  .hero {
+    margin: 32px auto;
+    padding: 0 16px;
+    gap: 24px;
+  }
+
+  .panel {
+    padding: 20px;
+  }
+
+  .join {
+    margin: 0 auto 32px;
+    max-width: 100%;
+    padding: 0 16px;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .join-badge {
+    margin-top: 0;
+    margin-right: 0;
+    margin-bottom: 0;
+  }
+
+  .join-panel {
+    padding-left: 0;
+  }
+
+  .description-band {
+    padding: 32px 16px;
+  }
+
+  .footer {
+    justify-content: center;
+    text-align: center;
+    padding: 16px;
+    flex-direction: column;
+  }
+
+  .footer-links {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: 1.4rem;
+  }
+
+  h2 {
+    font-size: 1.1rem;
+  }
+
+  p {
+    font-size: 0.95rem;
+  }
+
+  .navbar-inner {
+    padding: 10px 12px;
+    gap: 12px;
+  }
+
+  .navbar-logo {
+    width: 28px;
+    height: 28px;
+  }
+
+  .navbar-title {
+    font-size: 0.9rem;
+  }
+
+  .control-btn {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+  }
+
+  .hero {
+    margin: 24px auto;
+    padding: 0 12px;
+    gap: 16px;
+  }
+
+  .server-icon-img {
+    width: 90px;
+    height: 90px;
+  }
+
+  .panel {
+    padding: 16px;
+    border-radius: 10px;
+  }
+
+  .join {
+    margin: 0 auto 24px;
+    padding: 0 12px;
+  }
+
+  .join-badge {
+    width: 64px;
+    height: 64px;
+  }
+
+  .btn-primary {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    width: 100%;
+    text-align: center;
+  }
+
+  .description-band {
+    padding: 24px 12px;
+  }
+
+  .description-inner {
+    padding: 0;
+  }
+
+  .footer {
+    padding: 12px;
+  }
+
+  .footer-discord-icon,
+  .footer-roblox-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .footer-links {
+    gap: 8px;
+  }
+
+  .footer-copyright {
+    font-size: 0.8rem;
+  }
+}

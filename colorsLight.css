@@ -1,0 +1,19 @@
+/* Light theme — soft blue, high readability */
+:root {
+  --bg-body: #F5F9FF;
+  --bg-navbar: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --bg-band: #EAF1FC;
+  --bg-footer: #E9F0FB;
+
+  --text-primary: #16233A;
+  --text-secondary: #5B6B84;
+  --text-on-accent: #FFFFFF;
+
+  --accent: #2456C9;
+  --accent-hover: #1B3F9E;
+  --accent-soft: #E3ECFC;
+
+  --border: #D3E1F7;
+  --shadow: rgba(36, 86, 201, 0.10);
+}

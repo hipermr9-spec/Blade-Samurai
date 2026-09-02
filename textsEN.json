@@ -1,0 +1,32 @@
+{
+  "meta": {
+    "title": "Blade Samurai Duels — Discord"
+  },
+  "navbar": {
+    "title": "Blade Samurai Duels",
+    "linkAbout": "About",
+    "linkJoin": "Join",
+    "linkDescription": "Description"
+  },
+  "hero": {
+    "iconAlt": "Server icon"
+  },
+  "about": {
+    "heading": "About the game and server",
+    "text": "This Server For A Roblox Game Server: Chatting! Join Blade Samurai Official Server to chat with the community, get updates on new features."
+  },
+  "join": {
+    "heading": "How to join",
+    "text": "Click the button below to join our Discord server and become part of the community.",
+    "button": "Join the server"
+  },
+  "description": {
+    "heading": "Server description",
+    "text": "Welcome to the Blade Samurai Official Server! ⚔️\n\nThis is the official hub for everyone who plays Blade Samurai — whether you're a brand new recruit or a seasoned blade master.\n\nWhat you'll find here:\n\n📢 Official game updates, patch notes, and new feature announcements\n💬 Active chat with the community — make friends and squad up\n🎁 Codes, giveaways, and exclusive events\n💡 Tips, tricks, and strategies from other players\n🐞 A place to report bugs and share feedback directly\n\nWhy join?\nWe're building this community together with the players. Whether you want to talk strategy, hang out, or just watch the game grow, there's a place for you here.\n\nCome say hi, share your best moments, and be part of the journey from day one!"
+  },
+  "footer": {
+    "discordLabel": "Discord server link",
+    "text": "Footer",
+    "copyright": "© 2026 Blade Samurai Duels By DEV TOPER"
+  }
+}

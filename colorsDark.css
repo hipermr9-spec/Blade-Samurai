@@ -1,0 +1,19 @@
+/* Dark theme — deep navy, easy on the eyes at night */
+:root {
+  --bg-body: #0B1220;
+  --bg-navbar: #0F1B2F;
+  --bg-card: #122036;
+  --bg-band: #0F1B2F;
+  --bg-footer: #0B1220;
+
+  --text-primary: #E7EEFB;
+  --text-secondary: #93A6C4;
+  --text-on-accent: #0B1220;
+
+  --accent: #5B9CFF;
+  --accent-hover: #7FB1FF;
+  --accent-soft: #1B3357;
+
+  --border: #1E3358;
+  --shadow: rgba(0, 0, 0, 0.40);
+}
