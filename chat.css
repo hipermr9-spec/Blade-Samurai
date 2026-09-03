@@ -10,6 +10,8 @@
 .message { padding: 12px 0; border-bottom: 1px solid #e8e1d6; }
 .message-meta { display: flex; align-items: baseline; gap: 10px; }
 .message-meta strong { color: var(--ink); }
+.message-meta img, .admin-user img { width: 28px; height: 28px; object-fit: cover; border-radius: 50%; vertical-align: middle; }
+.badge { width: 16px !important; height: 16px !important; object-fit: contain !important; border-radius: 0 !important; }
 .message-meta time { color: var(--muted); font-size: .72rem; }
 .message p { color: var(--ink); white-space: pre-wrap; margin-top: 2px; }
 .empty-state { color: var(--muted); text-align: center; padding: 70px 0; }
@@ -17,4 +19,17 @@
 .message-form input { flex: 1; }
 .message-form button { border: 0; cursor: pointer; flex-shrink: 0; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.profile-panel, .admin-panel { margin-top: 24px; padding: 24px; background: rgba(255, 253, 248, .78); border: 1px solid var(--line); border-radius: 8px; }
+.profile-panel h2, .admin-panel h2 { color: var(--ink); }
+.profile-form { display: flex; align-items: end; gap: 10px; margin-top: 18px; }
+.profile-form label { font-size: .8rem; font-weight: 600; }
+.profile-form input { min-width: 0; flex: 1; padding: 12px; border: 1px solid var(--line); border-radius: 5px; background: #fffdf8; font: inherit; }
+.profile-form button { border: 0; cursor: pointer; }
+.admin-users { display: grid; gap: 10px; margin-top: 18px; }
+.admin-user { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.admin-user-name { flex: 1; color: var(--ink); font-weight: 700; }
+.admin-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.admin-actions button { border: 1px solid var(--line); background: transparent; color: var(--ink); padding: 6px 8px; cursor: pointer; }
+.admin-actions .danger { color: #b53b2e; }
+@media (max-width: 600px) { .profile-form { display: grid; align-items: stretch; } .admin-user { align-items: flex-start; flex-wrap: wrap; } .admin-actions { width: 100%; margin-left: 38px; } }
 @media (max-width: 600px) { .chat-header { align-items: flex-start; padding: 14px; } .chat-account { display: block; text-align: right; } .chat-account .text-button { display: block; margin-top: 5px; margin-left: auto; } .chat-layout { width: min(100% - 24px, 900px); padding: 28px 0; } .chat-panel { min-height: calc(100vh - 100px); padding: 22px 16px; box-shadow: 6px 6px 0 #e4ddd0; } .chat-heading { display: block; } .online-mark { display: inline-block; margin-top: 10px; } }

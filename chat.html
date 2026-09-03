@@ -26,6 +26,19 @@
       </form>
       <p id="chat-status" class="form-status" role="alert"></p>
     </section>
+    <section class="profile-panel" aria-labelledby="profile-title">
+      <div><p class="eyebrow">YOUR PROFILE</p><h2 id="profile-title">Profile image</h2></div>
+      <form id="profile-form" class="profile-form">
+        <label for="profile-image">Image URL</label>
+        <input id="profile-image" name="profileImage" type="url" maxlength="500" placeholder="https://...">
+        <button class="btn-primary" type="submit">Save profile</button>
+        <p id="profile-status" class="form-status" role="alert"></p>
+      </form>
+    </section>
+    <section id="admin-panel" class="admin-panel" aria-labelledby="admin-title" hidden>
+      <div class="chat-heading"><div><p class="eyebrow">ADMIN CONTROL</p><h2 id="admin-title">Community accounts</h2></div><button id="refresh-admin" class="text-button" type="button">Refresh</button></div>
+      <div id="admin-users" class="admin-users"></div>
+    </section>
   </main>
   <script src="chat.js" defer></script>
 </body>

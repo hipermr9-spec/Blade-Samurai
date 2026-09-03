@@ -1,39 +1,45 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
-const fs = require('fs');
 const path = require('path');
+const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 const port = process.env.PORT || 3000;
-const dataDirectory = path.join(__dirname, 'data');
-const dataFile = path.join(dataDirectory, 'chat.json');
 const sessions = new Map();
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
 
-function loadData() {
-	if (!fs.existsSync(dataDirectory)) fs.mkdirSync(dataDirectory, { recursive: true });
-	if (!fs.existsSync(dataFile)) {
-		fs.writeFileSync(dataFile, JSON.stringify({ users: [], messages: [] }, null, 2));
-	}
-	return JSON.parse(fs.readFileSync(dataFile, 'utf8'));
+function databaseResult(result) {
+	if (result.error) throw result.error;
+	return result.data;
 }
 
-function saveData(data) {
-	fs.writeFileSync(dataFile, JSON.stringify(data, null, 2));
+async function findUserById(userId) {
+	const result = await supabase.from('users').select('"user-id", username, verified, admin, developer, profile_image, last_seen').eq('user-id', userId).single();
+	return databaseResult(result);
 }
 
 function getSessionUser(request) {
 	const token = request.headers.cookie?.match(/(?:^|; )session=([^;]+)/)?.[1];
 	const userId = token && sessions.get(token);
 	if (!userId) return null;
-	const user = loadData().users.find((candidate) => candidate.id === userId);
-	return user ? { id: user.id, username: user.username } : null;
+	return userId;
 }
 
-function requireUser(request, response, next) {
-	const user = getSessionUser(request);
-	if (!user) return response.status(401).json({ error: 'Please sign in first.' });
-	request.user = user;
+async function attachUser(request, response, next) {
+	const userId = getSessionUser(request);
+	if (!userId) return response.status(401).json({ error: 'Please sign in first.' });
+	try {
+		request.user = await findUserById(userId);
+		await supabase.from('users').update({ last_seen: new Date().toISOString() }).eq('user-id', userId);
+		next();
+	} catch (error) {
+		response.status(500).json({ error: 'Could not load your account.' });
+	}
+}
+
+function requireAdmin(request, response, next) {
+	if (!request.user.admin) return response.status(403).json({ error: 'Admin access required.' });
 	next();
 }
 
@@ -47,7 +53,6 @@ app.get('/', pageRoute('index.html'));
 app.get('/login', pageRoute('login.html'));
 app.get('/signup', pageRoute('signup.html'));
 app.get('/chat', (request, response) => {
-	if (!getSessionUser(request)) return response.redirect('/login?next=/chat');
 	response.sendFile(path.join(__dirname, 'chat.html'));
 });
 
@@ -67,25 +72,25 @@ app.post('/api/signup', async (request, response) => {
 	}
 	if (password.length < 8) return response.status(400).json({ error: 'Password must be at least 8 characters.' });
 
-	const data = loadData();
-	if (data.users.some((user) => user.username.toLowerCase() === username.toLowerCase())) {
+	const existing = databaseResult(await supabase.from('users').select('"user-id"').ilike('username', username));
+	if (existing.length) {
 		return response.status(409).json({ error: 'That username is already taken.' });
 	}
-	const user = { id: crypto.randomUUID(), username, password: await bcrypt.hash(password, 12) };
-	data.users.push(user);
-	saveData(data);
-	createSession(response, user.id);
+	const user = databaseResult(await supabase.from('users').insert({ username, password: await bcrypt.hash(password, 12), verified: false, admin: false, developer: false }).select('"user-id", username').single());
+	createSession(response, user['user-id']);
 	response.status(201).json({ username: user.username });
 });
 
 app.post('/api/login', async (request, response) => {
 	const username = String(request.body.username || '').trim();
 	const password = String(request.body.password || '');
-	const user = loadData().users.find((candidate) => candidate.username.toLowerCase() === username.toLowerCase());
+	const userResult = await supabase.from('users').select('"user-id", username, password').ilike('username', username).maybeSingle();
+	if (userResult.error) return response.status(500).json({ error: 'Could not sign in right now.' });
+	const user = userResult.data;
 	if (!user || !(await bcrypt.compare(password, user.password))) {
 		return response.status(401).json({ error: 'Incorrect username or password.' });
 	}
-	createSession(response, user.id);
+	createSession(response, user['user-id']);
 	response.json({ username: user.username });
 });
 
@@ -102,22 +107,72 @@ app.post('/api/logout', (request, response) => {
 	response.status(204).end();
 });
 
-app.get('/api/me', requireUser, (request, response) => response.json(request.user));
+app.get('/api/me', attachUser, (request, response) => response.json(request.user));
 
-app.get('/api/messages', requireUser, (request, response) => {
-	const messages = loadData().messages.slice(-100);
-	response.json(messages);
+app.get('/api/messages', attachUser, async (request, response) => {
+	try {
+		const messages = databaseResult(await supabase.from('chat').select('message_id, created_at, content, "user-id", badges').order('created_at', { ascending: true }).limit(request.user.admin ? 1000 : 100));
+		const userIds = [...new Set(messages.map((message) => message['user-id']).filter(Boolean))];
+		const users = userIds.length ? databaseResult(await supabase.from('users').select('"user-id", username, verified, admin, developer, profile_image').in('user-id', userIds)) : [];
+		const userMap = new Map(users.map((user) => [user['user-id'], user]));
+		response.json(messages.map((message) => {
+			const mentions = message.badges?.mentions || [];
+			const mentioned = mentions.includes(request.user.username.toLowerCase()) || mentions.includes('everyone') || (request.user.admin && mentions.includes('admins')) || (mentions.includes('here') && users.some((user) => user['user-id'] === request.user['user-id']));
+			return { ...message, username: userMap.get(message['user-id'])?.username || 'Deleted user', profile: userMap.get(message['user-id']) || null, mentioned };
+		}));
+	} catch (error) {
+		response.status(500).json({ error: 'Could not load messages.' });
+	}
 });
 
-app.post('/api/messages', requireUser, (request, response) => {
+app.post('/api/messages', attachUser, async (request, response) => {
 	const text = String(request.body.text || '').trim();
 	if (!text || text.length > 500) return response.status(400).json({ error: 'Message must be between 1 and 500 characters.' });
-	const data = loadData();
-	const message = { id: crypto.randomUUID(), username: request.user.username, text, createdAt: new Date().toISOString() };
-	data.messages.push(message);
-	data.messages = data.messages.slice(-500);
-	saveData(data);
-	response.status(201).json(message);
+	try {
+		const mentions = [...text.matchAll(/@(everyone|admins|here|[a-zA-Z0-9_]{3,20})/gi)].map((match) => match[1].toLowerCase());
+		if (mentions.some((mention) => ['everyone', 'admins', 'here'].includes(mention)) && !request.user.admin) return response.status(403).json({ error: 'Only admins can use group mentions.' });
+		const message = databaseResult(await supabase.from('chat').insert({ content: text, 'user-id': request.user['user-id'], badges: { mentions } }).select('message_id, created_at, content, "user-id", badges').single());
+		response.status(201).json({ ...message, username: request.user.username, profile: request.user, mentions });
+	} catch (error) {
+		response.status(500).json({ error: 'Could not send message.' });
+	}
+});
+
+app.patch('/api/profile', attachUser, async (request, response) => {
+	const profileImage = String(request.body.profileImage || '').trim();
+	if (profileImage.length > 500) return response.status(400).json({ error: 'Profile image URL is too long.' });
+	try {
+		const user = databaseResult(await supabase.from('users').update({ profile_image: profileImage || null }).eq('user-id', request.user['user-id']).select('"user-id", username, verified, admin, developer, profile_image').single());
+		response.json(user);
+	} catch (error) {
+		response.status(500).json({ error: 'Could not update your profile.' });
+	}
+});
+
+app.get('/api/admin/users', attachUser, requireAdmin, async (request, response) => {
+	try { response.json(databaseResult(await supabase.from('users').select('"user-id", created_at, username, verified, admin, developer, profile_image, last_seen').order('created_at', { ascending: false }))); }
+	catch (error) { response.status(500).json({ error: 'Could not load accounts.' }); }
+});
+
+app.patch('/api/admin/users/:id', attachUser, requireAdmin, async (request, response) => {
+	const changes = {};
+	for (const field of ['verified', 'admin', 'developer']) if (typeof request.body[field] === 'boolean') changes[field] = request.body[field];
+	try { response.json(databaseResult(await supabase.from('users').update(changes).eq('user-id', request.params.id).select('"user-id", username, verified, admin, developer, profile_image').single())); }
+	catch (error) { response.status(500).json({ error: 'Could not update account.' }); }
+});
+
+app.delete('/api/admin/users/:id', attachUser, requireAdmin, async (request, response) => {
+	if (request.params.id === String(request.user['user-id'])) return response.status(400).json({ error: 'You cannot delete your own account.' });
+	try {
+		 databaseResult(await supabase.from('chat').delete().eq('user-id', request.params.id));
+		databaseResult(await supabase.from('users').delete().eq('user-id', request.params.id));
+		response.status(204).end();
+	} catch (error) { response.status(500).json({ error: 'Could not delete account.' }); }
+});
+
+app.delete('/api/admin/messages/:id', attachUser, requireAdmin, async (request, response) => {
+	try { databaseResult(await supabase.from('chat').delete().eq('message_id', request.params.id)); response.status(204).end(); }
+	catch (error) { response.status(500).json({ error: 'Could not delete message.' }); }
 });
 
 if (require.main === module) {
