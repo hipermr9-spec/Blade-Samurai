@@ -8,6 +8,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 const sessions = new Map();
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+const frontendOrigin = process.env.FRONTEND_ORIGIN || 'https://blade-samurai.vercel.app';
 
 function databaseResult(result) {
 	if (result.error) throw result.error;
@@ -48,6 +49,16 @@ function pageRoute(page) {
 }
 
 app.use(express.json({ limit: '10kb' }));
+app.use((request, response, next) => {
+	if (request.headers.origin === frontendOrigin) {
+		response.setHeader('Access-Control-Allow-Origin', frontendOrigin);
+		response.setHeader('Access-Control-Allow-Credentials', 'true');
+		response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+		response.setHeader('Access-Control-Allow-Methods', 'GET,POST,PATCH,DELETE,OPTIONS');
+	}
+	if (request.method === 'OPTIONS') return response.sendStatus(204);
+	next();
+});
 
 app.get('/', pageRoute('index.html'));
 app.get('/login', pageRoute('login.html'));
@@ -97,13 +108,13 @@ app.post('/api/login', async (request, response) => {
 function createSession(response, userId) {
 	const token = crypto.randomBytes(32).toString('hex');
 	sessions.set(token, userId);
-	response.setHeader('Set-Cookie', `session=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=604800${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`);
+	response.setHeader('Set-Cookie', `session=${token}; HttpOnly; SameSite=${process.env.NODE_ENV === 'production' ? 'None; Secure' : 'Lax'}; Path=/; Max-Age=604800`);
 }
 
 app.post('/api/logout', (request, response) => {
 	const token = request.headers.cookie?.match(/(?:^|; )session=([^;]+)/)?.[1];
 	if (token) sessions.delete(token);
-	response.setHeader('Set-Cookie', 'session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0');
+	response.setHeader('Set-Cookie', `session=; HttpOnly; SameSite=${process.env.NODE_ENV === 'production' ? 'None; Secure' : 'Lax'}; Path=/; Max-Age=0`);
 	response.status(204).end();
 });
 

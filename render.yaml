@@ -5,6 +5,13 @@ services:
     buildCommand: npm install
     startCommand: npm start
     healthCheckPath: /
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: FRONTEND_ORIGIN
+        value: https://blade-samurai.vercel.app
     disk:
       name: blade-samurai-data
       mountPath: /opt/render/project/src/data

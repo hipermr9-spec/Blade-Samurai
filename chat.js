@@ -1,4 +1,5 @@
 (() => {
+  const apiBase = 'https://blade-samurai.onrender.com';
   const messagesElement = document.getElementById('messages');
   const form = document.getElementById('message-form');
   const input = document.getElementById('message-input');
@@ -51,7 +52,7 @@
       if (account.admin) {
         const deleteButton = document.createElement('button');
         deleteButton.type = 'button'; deleteButton.className = 'text-button'; deleteButton.textContent = 'Delete';
-        deleteButton.addEventListener('click', async () => { await fetch(`/api/admin/messages/${message.message_id}`, { method: 'DELETE' }); loadMessages(); });
+        deleteButton.addEventListener('click', async () => { await fetch(`${apiBase}/api/admin/messages/${message.message_id}`, { method: 'DELETE', credentials: 'include' }); loadMessages(); });
         meta.append(deleteButton);
       }
       return item;
@@ -63,7 +64,7 @@
   }
 
   async function loadMessages() {
-    const response = await fetch('/api/messages');
+    const response = await fetch(`${apiBase}/api/messages`, { credentials: 'include' });
     if (response.status === 401) return window.location.assign('/login?next=/chat');
     if (!response.ok) throw new Error('Could not load messages.');
     renderMessages(await response.json());
@@ -72,14 +73,14 @@
   async function saveProfile(event) {
     event.preventDefault();
     profileStatus.textContent = 'Saving...';
-    const response = await fetch('/api/profile', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ profileImage: profileImage.value }) });
+    const response = await fetch(`${apiBase}/api/profile`, { method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ profileImage: profileImage.value }) });
     const result = await response.json();
     profileStatus.textContent = response.ok ? 'Profile saved.' : result.error;
     if (response.ok) account = { ...account, ...result };
   }
 
   async function loadAdminUsers() {
-    const response = await fetch('/api/admin/users');
+    const response = await fetch(`${apiBase}/api/admin/users`, { credentials: 'include' });
     if (!response.ok) return;
     const users = await response.json();
     adminUsers.replaceChildren(...users.map((user) => {
@@ -96,13 +97,13 @@
         const button = document.createElement('button');
         button.type = 'button';
         button.textContent = `${user[field] ? 'Remove' : 'Give'} ${label}`;
-        button.addEventListener('click', async () => { await fetch(`/api/admin/users/${user['user-id']}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ [field]: !user[field] }) }); loadAdminUsers(); });
+        button.addEventListener('click', async () => { await fetch(`${apiBase}/api/admin/users/${user['user-id']}`, { method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ [field]: !user[field] }) }); loadAdminUsers(); });
         actions.append(button);
       }
       if (String(user['user-id']) !== String(account['user-id'])) {
         const button = document.createElement('button');
         button.type = 'button'; button.className = 'danger'; button.textContent = 'Delete';
-        button.addEventListener('click', async () => { if (window.confirm(`Delete ${user.username}?`)) { await fetch(`/api/admin/users/${user['user-id']}`, { method: 'DELETE' }); loadAdminUsers(); } });
+        button.addEventListener('click', async () => { if (window.confirm(`Delete ${user.username}?`)) { await fetch(`${apiBase}/api/admin/users/${user['user-id']}`, { method: 'DELETE', credentials: 'include' }); loadAdminUsers(); } });
         actions.append(button);
       }
       row.append(actions);
@@ -112,7 +113,7 @@
 
   async function start() {
     try {
-      const meResponse = await fetch('/api/me');
+      const meResponse = await fetch(`${apiBase}/api/me`, { credentials: 'include' });
       if (!meResponse.ok) return window.location.assign('/login?next=/chat');
       account = await meResponse.json();
       currentUser.textContent = `Signed in as ${account.username}${account.admin ? ' · Admin' : ''}`;
@@ -132,7 +133,7 @@
     const text = input.value.trim();
     if (!text) return;
     status.textContent = '';
-    const response = await fetch('/api/messages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
+    const response = await fetch(`${apiBase}/api/messages`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
     const result = await response.json();
     if (!response.ok) {
       status.textContent = result.error || 'Message failed to send.';
@@ -147,7 +148,7 @@
   document.getElementById('refresh-admin').addEventListener('click', loadAdminUsers);
 
   document.getElementById('logout-button').addEventListener('click', async () => {
-    await fetch('/api/logout', { method: 'POST' });
+    await fetch(`${apiBase}/api/logout`, { method: 'POST', credentials: 'include' });
     window.location.assign('/');
   });
   start();
