@@ -6,11 +6,11 @@ const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 const port = process.env.PORT || 3000;
-const sessions = new Map();
 const supabaseUrl = process.env.SUPABASE_URL || 'https://pgmqgkbqjcgwqinzxdvi.supabase.co';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY || 'missing-supabase-key';
 const supabase = createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
 const frontendOrigin = process.env.FRONTEND_ORIGIN || 'https://blade-samurai.vercel.app';
+const sessionSecret = process.env.SESSION_SECRET || supabaseKey;
 
 function databaseResult(result) {
 	if (result.error) throw result.error;
@@ -24,9 +24,13 @@ async function findUserById(userId) {
 
 function getSessionUser(request) {
 	const token = request.headers.cookie?.match(/(?:^|; )session=([^;]+)/)?.[1];
-	const userId = token && sessions.get(token);
-	if (!userId) return null;
-	return userId;
+	if (!token) return null;
+	const [encodedUserId, expires, signature] = token.split('.');
+	if (!encodedUserId || !expires || !signature || Number(expires) < Date.now()) return null;
+	const payload = `${encodedUserId}.${expires}`;
+	const expected = crypto.createHmac('sha256', sessionSecret).update(payload).digest('base64url');
+	if (signature.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null;
+	return Buffer.from(encodedUserId, 'base64url').toString('utf8');
 }
 
 async function attachUser(request, response, next) {
@@ -108,14 +112,15 @@ app.post('/api/login', async (request, response) => {
 });
 
 function createSession(response, userId) {
-	const token = crypto.randomBytes(32).toString('hex');
-	sessions.set(token, userId);
+	const encodedUserId = Buffer.from(String(userId)).toString('base64url');
+	const expires = Date.now() + 604800000;
+	const payload = `${encodedUserId}.${expires}`;
+	const signature = crypto.createHmac('sha256', sessionSecret).update(payload).digest('base64url');
+	const token = `${payload}.${signature}`;
 	response.setHeader('Set-Cookie', `session=${token}; HttpOnly; SameSite=${process.env.NODE_ENV === 'production' ? 'None; Secure' : 'Lax'}; Path=/; Max-Age=604800`);
 }
 
 app.post('/api/logout', (request, response) => {
-	const token = request.headers.cookie?.match(/(?:^|; )session=([^;]+)/)?.[1];
-	if (token) sessions.delete(token);
 	response.setHeader('Set-Cookie', `session=; HttpOnly; SameSite=${process.env.NODE_ENV === 'production' ? 'None; Secure' : 'Lax'}; Path=/; Max-Age=0`);
 	response.status(204).end();
 });
