@@ -120,4 +120,8 @@ app.post('/api/messages', requireUser, (request, response) => {
 	response.status(201).json(message);
 });
 
-app.listen(port, () => console.log(`Blade Samurai server listening on port ${port}`));
+if (require.main === module) {
+	app.listen(port, () => console.log(`Blade Samurai server listening on port ${port}`));
+}
+
+module.exports = app;
