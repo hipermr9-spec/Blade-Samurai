@@ -15,6 +15,9 @@
   const profileStatus = document.getElementById('profile-status');
   const adminPanel = document.getElementById('admin-panel');
   const adminUsers = document.getElementById('admin-users');
+  const profileDialog = document.getElementById('profile-dialog');
+  const profileDialogContent = document.getElementById('profile-dialog-content');
+  const closeProfileDialog = document.getElementById('close-profile-dialog');
   let account;
   let newestMessageId = '';
 
@@ -34,6 +37,39 @@
     }
   }
 
+  function showProfile(profile, username) {
+    profileDialogContent.replaceChildren();
+    const imageUrl = validImageUrl(profile?.profile_image);
+    if (imageUrl) {
+      const image = document.createElement('img');
+      image.className = 'profile-dialog-avatar';
+      image.src = imageUrl;
+      image.alt = '';
+      image.addEventListener('error', () => image.remove(), { once: true });
+      profileDialogContent.append(image);
+    } else {
+      const initials = document.createElement('div');
+      initials.className = 'profile-dialog-avatar profile-dialog-placeholder';
+      initials.textContent = username.slice(0, 1).toUpperCase();
+      profileDialogContent.append(initials);
+    }
+    const name = document.createElement('h2');
+    name.id = 'profile-dialog-name';
+    name.textContent = username;
+    profileDialogContent.append(name);
+    const badges = document.createElement('div');
+    badges.className = 'profile-dialog-badges';
+    badges.insertAdjacentHTML('beforeend', badge(profile));
+    if (!badges.children.length) {
+      const detail = document.createElement('p');
+      detail.textContent = 'Blade Samurai community member';
+      profileDialogContent.append(detail);
+    } else {
+      profileDialogContent.append(badges);
+    }
+    profileDialog.showModal();
+  }
+
   function renderMessages(messages) {
     if (!messages.length) {
       messagesElement.innerHTML = '<p class="empty-state">No messages yet. Start the conversation.</p>';
@@ -44,22 +80,27 @@
       item.className = 'message';
       const meta = document.createElement('div');
       meta.className = 'message-meta';
+      const author = document.createElement('button');
+      author.className = 'message-author';
+      author.type = 'button';
+      author.addEventListener('click', () => showProfile(message.profile, message.username));
       const avatarUrl = validImageUrl(message.profile?.profile_image);
       if (avatarUrl) {
         const avatar = document.createElement('img');
         avatar.src = avatarUrl;
         avatar.alt = '';
         avatar.addEventListener('error', () => avatar.remove(), { once: true });
-        meta.append(avatar);
+        author.append(avatar);
       }
       const name = document.createElement('strong');
       name.textContent = message.username;
-      meta.append(name);
-      name.insertAdjacentHTML('afterend', badge(message.profile));
+      author.append(name);
+      author.insertAdjacentHTML('beforeend', badge(message.profile));
+      meta.append(author);
       const time = document.createElement('time');
       time.dateTime = message.created_at;
       time.textContent = new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      meta.append(name, time);
+      meta.append(time);
       const text = document.createElement('p');
       text.textContent = message.content;
       item.append(meta, text);
@@ -165,6 +206,10 @@
   });
   profileForm.addEventListener('submit', saveProfile);
   document.getElementById('refresh-admin').addEventListener('click', loadAdminUsers);
+  closeProfileDialog.addEventListener('click', () => profileDialog.close());
+  profileDialog.addEventListener('click', (event) => {
+    if (event.target === profileDialog) profileDialog.close();
+  });
 
   document.getElementById('logout-button').addEventListener('click', async () => {
     localStorage.removeItem('blade-samurai-session');
