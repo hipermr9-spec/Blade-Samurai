@@ -25,6 +25,15 @@
     return '';
   }
 
+  function validImageUrl(value) {
+    try {
+      const url = new URL(value);
+      return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
+    } catch {
+      return '';
+    }
+  }
+
   function renderMessages(messages) {
     if (!messages.length) {
       messagesElement.innerHTML = '<p class="empty-state">No messages yet. Start the conversation.</p>';
@@ -35,10 +44,12 @@
       item.className = 'message';
       const meta = document.createElement('div');
       meta.className = 'message-meta';
-      if (message.profile?.profile_image) {
+      const avatarUrl = validImageUrl(message.profile?.profile_image);
+      if (avatarUrl) {
         const avatar = document.createElement('img');
-        avatar.src = message.profile.profile_image;
+        avatar.src = avatarUrl;
         avatar.alt = '';
+        avatar.addEventListener('error', () => avatar.remove(), { once: true });
         meta.append(avatar);
       }
       const name = document.createElement('strong');
@@ -46,8 +57,8 @@
       meta.append(name);
       name.insertAdjacentHTML('afterend', badge(message.profile));
       const time = document.createElement('time');
-      time.dateTime = message.createdAt;
-      time.textContent = new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      time.dateTime = message.created_at;
+      time.textContent = new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       meta.append(name, time);
       const text = document.createElement('p');
       text.textContent = message.content;
@@ -92,7 +103,8 @@
     adminUsers.replaceChildren(...users.map((user) => {
       const row = document.createElement('div');
       row.className = 'admin-user';
-      if (user.profile_image) { const image = document.createElement('img'); image.src = user.profile_image; image.alt = ''; row.append(image); }
+      const avatarUrl = validImageUrl(user.profile_image);
+      if (avatarUrl) { const image = document.createElement('img'); image.src = avatarUrl; image.alt = ''; image.addEventListener('error', () => image.remove(), { once: true }); row.append(image); }
       const name = document.createElement('span');
       name.className = 'admin-user-name';
       name.textContent = `${user.username}${user.admin ? ' (admin)' : ''}`;
