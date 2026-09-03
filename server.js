@@ -23,7 +23,9 @@ async function findUserById(userId) {
 }
 
 function getSessionUser(request) {
-	const token = request.headers.cookie?.match(/(?:^|; )session=([^;]+)/)?.[1];
+	const cookieToken = request.headers.cookie?.match(/(?:^|; )session=([^;]+)/)?.[1];
+	const bearerToken = request.headers.authorization?.startsWith('Bearer ') ? request.headers.authorization.slice(7) : null;
+	const token = bearerToken || cookieToken;
 	if (!token) return null;
 	const [encodedUserId, expires, signature] = token.split('.');
 	if (!encodedUserId || !expires || !signature || Number(expires) < Date.now()) return null;
@@ -94,8 +96,8 @@ app.post('/api/signup', async (request, response) => {
 		return response.status(409).json({ error: 'That username is already taken.' });
 	}
 	const user = databaseResult(await supabase.from('users').insert({ username, password: await bcrypt.hash(password, 12), verified: false, admin: false, developer: false }).select('"user-id", username').single());
-	createSession(response, user['user-id']);
-	response.status(201).json({ username: user.username });
+	const token = createSession(response, user['user-id']);
+	response.status(201).json({ username: user.username, token });
 });
 
 app.post('/api/login', async (request, response) => {
@@ -107,8 +109,8 @@ app.post('/api/login', async (request, response) => {
 	if (!user || !(await bcrypt.compare(password, user.password))) {
 		return response.status(401).json({ error: 'Incorrect username or password.' });
 	}
-	createSession(response, user['user-id']);
-	response.json({ username: user.username });
+	const token = createSession(response, user['user-id']);
+	response.json({ username: user.username, token });
 });
 
 function createSession(response, userId) {
@@ -118,6 +120,7 @@ function createSession(response, userId) {
 	const signature = crypto.createHmac('sha256', sessionSecret).update(payload).digest('base64url');
 	const token = `${payload}.${signature}`;
 	response.setHeader('Set-Cookie', `session=${token}; HttpOnly; SameSite=${process.env.NODE_ENV === 'production' ? 'None; Secure' : 'Lax'}; Path=/; Max-Age=604800`);
+	return token;
 }
 
 app.post('/api/logout', (request, response) => {

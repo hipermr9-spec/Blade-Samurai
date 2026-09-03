@@ -13,6 +13,7 @@
       const response = await fetch(endpoint, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Something went wrong.');
+      if (result.token) localStorage.setItem('blade-samurai-session', result.token);
       const next = new URLSearchParams(window.location.search).get('next') || '/chat';
       window.location.assign(next.startsWith('/') ? next : '/chat');
     } catch (error) {
