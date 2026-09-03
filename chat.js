@@ -43,6 +43,7 @@
       }
       const name = document.createElement('strong');
       name.textContent = message.username;
+      meta.append(name);
       name.insertAdjacentHTML('afterend', badge(message.profile));
       const time = document.createElement('time');
       time.dateTime = message.createdAt;
