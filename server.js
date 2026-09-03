@@ -18,8 +18,10 @@ function databaseResult(result) {
 }
 
 async function findUserById(userId) {
-	const result = await supabase.from('users').select('"user-id", username, verified, admin, developer, profile_image, last_seen').eq('user-id', userId).single();
-	return databaseResult(result);
+	const result = await supabase.from('users').select('"user-id", username, verified, admin, developer').eq('user-id', userId).single();
+	const user = databaseResult(result);
+	const optional = await supabase.from('users').select('profile_image, last_seen').eq('user-id', userId).single();
+	return optional.error ? user : { ...user, ...optional.data };
 }
 
 function getSessionUser(request) {
@@ -135,7 +137,11 @@ app.get('/api/messages', attachUser, async (request, response) => {
 	try {
 		const messages = databaseResult(await supabase.from('chat').select('message_id, created_at, content, "user-id", badges').order('created_at', { ascending: true }).limit(request.user.admin ? 1000 : 100));
 		const userIds = [...new Set(messages.map((message) => message['user-id']).filter(Boolean))];
-		const users = userIds.length ? databaseResult(await supabase.from('users').select('"user-id", username, verified, admin, developer, profile_image').in('user-id', userIds)) : [];
+		const users = userIds.length ? databaseResult(await supabase.from('users').select('"user-id", username, verified, admin, developer').in('user-id', userIds)) : [];
+		for (const user of users) {
+			const optional = await supabase.from('users').select('profile_image').eq('user-id', user['user-id']).single();
+			if (!optional.error) Object.assign(user, optional.data);
+		}
 		const userMap = new Map(users.map((user) => [user['user-id'], user]));
 		response.json(messages.map((message) => {
 			const mentions = message.badges?.mentions || [];
@@ -172,7 +178,7 @@ app.patch('/api/profile', attachUser, async (request, response) => {
 });
 
 app.get('/api/admin/users', attachUser, requireAdmin, async (request, response) => {
-	try { response.json(databaseResult(await supabase.from('users').select('"user-id", created_at, username, verified, admin, developer, profile_image, last_seen').order('created_at', { ascending: false }))); }
+	try { response.json(databaseResult(await supabase.from('users').select('"user-id", created_at, username, verified, admin, developer').order('created_at', { ascending: false }))); }
 	catch (error) { response.status(500).json({ error: 'Could not load accounts.' }); }
 });
 
