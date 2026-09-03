@@ -1,23 +1,9 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "api/index.js",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": [
-          "*.html",
-          "*.css",
-          "*.js",
-          "*.json",
-          "img/**",
-          "robots.txt",
-          "sitemap.xml"
-        ]
-      }
-    }
-  ],
-  "routes": [
-    { "src": "/(.*)", "dest": "/api/index.js" }
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://blade-samurai.onrender.com/api/:path*" },
+    { "source": "/login", "destination": "/login.html" },
+    { "source": "/signup", "destination": "/signup.html" },
+    { "source": "/chat", "destination": "/chat.html" }
   ]
 }
