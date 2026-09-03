@@ -43,7 +43,8 @@ async function attachUser(request, response, next) {
 		await supabase.from('users').update({ last_seen: new Date().toISOString() }).eq('user-id', userId);
 		next();
 	} catch (error) {
-		response.status(500).json({ error: 'Could not load your account.' });
+		console.error('Authentication lookup failed:', error.message);
+		response.status(500).json({ error: 'Could not load your account. Run supabase.sql in Supabase SQL Editor, then redeploy Render.' });
 	}
 }
 

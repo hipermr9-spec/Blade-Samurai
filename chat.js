@@ -119,7 +119,8 @@
   async function start() {
     try {
       const meResponse = await apiFetch('/api/me');
-      if (!meResponse.ok) return window.location.assign('/login?next=/chat');
+      if (meResponse.status === 401) return window.location.assign('/login?next=/chat');
+      if (!meResponse.ok) throw new Error((await meResponse.json()).error || 'The account service is unavailable.');
       account = await meResponse.json();
       currentUser.textContent = `Signed in as ${account.username}${account.admin ? ' · Admin' : ''}`;
       profileImage.value = account.profile_image || '';
