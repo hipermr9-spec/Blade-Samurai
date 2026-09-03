@@ -7,7 +7,9 @@ const { createClient } = require('@supabase/supabase-js');
 const app = express();
 const port = process.env.PORT || 3000;
 const sessions = new Map();
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+const supabaseUrl = process.env.SUPABASE_URL || 'https://pgmqgkbqjcgwqinzxdvi.supabase.co';
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY || 'missing-supabase-key';
+const supabase = createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
 const frontendOrigin = process.env.FRONTEND_ORIGIN || 'https://blade-samurai.vercel.app';
 
 function databaseResult(result) {
