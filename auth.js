@@ -1,5 +1,4 @@
 (() => {
-  const apiBase = 'https://blade-samurai.onrender.com';
   const form = document.querySelector('form');
   const status = document.getElementById('form-status');
   if (!form) return;
@@ -8,7 +7,7 @@
     event.preventDefault();
     status.textContent = 'Working...';
     status.className = 'form-status';
-    const endpoint = `${apiBase}${form.id === 'signup-form' ? '/api/signup' : '/api/login'}`;
+    const endpoint = form.id === 'signup-form' ? '/api/signup' : '/api/login';
     const body = Object.fromEntries(new FormData(form));
     try {
       const response = await fetch(endpoint, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
