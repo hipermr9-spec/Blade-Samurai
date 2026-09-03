@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Public Blade Samurai community chat.">
+  <title>Community chat | Blade Samurai</title>
+  <link rel="stylesheet" href="colorsLight.css">
+  <link rel="stylesheet" href="app.css">
+  <link rel="stylesheet" href="auth.css">
+  <link rel="stylesheet" href="chat.css">
+</head>
+<body class="chat-page">
+  <header class="chat-header">
+    <a class="auth-brand" href="/"><img src="img/server-icon.png" alt="Blade Samurai logo" width="40" height="40"><span>Blade Samurai</span></a>
+    <div class="chat-account"><span id="current-user"></span><button id="logout-button" class="text-button" type="button">Sign out</button></div>
+  </header>
+  <main class="chat-layout">
+    <section class="chat-panel" aria-labelledby="chat-title">
+      <div class="chat-heading"><div><p class="eyebrow">LIVE COMMUNITY</p><h1 id="chat-title">The dojo chat</h1></div><span class="online-mark">Public room</span></div>
+      <div id="messages" class="messages" aria-live="polite"><p class="empty-state">Loading the conversation...</p></div>
+      <form id="message-form" class="message-form">
+        <label class="sr-only" for="message-input">Write a message</label>
+        <input id="message-input" name="text" type="text" maxlength="500" placeholder="Say something to the dojo..." autocomplete="off" required>
+        <button class="btn-primary" type="submit">Send</button>
+      </form>
+      <p id="chat-status" class="form-status" role="alert"></p>
+    </section>
+  </main>
+  <script src="chat.js" defer></script>
+</body>
+</html>

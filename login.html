@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sign in to the Blade Samurai community chat.">
+  <title>Sign in | Blade Samurai</title>
+  <link rel="stylesheet" href="colorsLight.css">
+  <link rel="stylesheet" href="app.css">
+  <link rel="stylesheet" href="auth.css">
+</head>
+<body class="auth-page">
+  <main class="auth-shell">
+    <a class="auth-brand" href="/">
+      <img src="img/server-icon.png" alt="Blade Samurai logo" width="44" height="44">
+      <span>Blade Samurai</span>
+    </a>
+    <section class="auth-card" aria-labelledby="login-title">
+      <p class="eyebrow">COMMUNITY ACCESS</p>
+      <h1 id="login-title">Welcome back.</h1>
+      <p class="auth-intro">Sign in to join the public Blade Samurai chat.</p>
+      <form id="login-form" class="auth-form">
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" autocomplete="username" required maxlength="20">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+        <button class="btn-primary auth-submit" type="submit">Sign in</button>
+        <p class="form-status" id="form-status" role="alert"></p>
+      </form>
+      <p class="auth-switch">New here? <a href="/signup">Create an account</a></p>
+    </section>
+  </main>
+  <script src="auth.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+.chat-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px max(20px, calc((100% - 1080px) / 2)); border-bottom: 1px solid var(--line); background: rgba(255, 253, 248, .82); }
+.chat-account { display: flex; align-items: center; gap: 18px; color: var(--muted); font-size: .85rem; }
+.text-button { border: 0; background: none; color: var(--accent-warm); font: inherit; font-weight: 700; cursor: pointer; }
+.chat-layout { width: min(100% - 40px, 900px); margin: 0 auto; padding: 60px 0; }
+.chat-panel { min-height: 650px; display: flex; flex-direction: column; padding: clamp(24px, 5vw, 48px); background: rgba(255, 253, 248, .78); border: 1px solid var(--line); border-radius: 8px; box-shadow: 12px 12px 0 #e4ddd0; }
+.chat-heading { display: flex; justify-content: space-between; align-items: start; gap: 20px; padding-bottom: 26px; border-bottom: 1px solid var(--line); }
+.chat-heading h1 { color: var(--ink); font-size: clamp(2rem, 5vw, 3.4rem); }
+.online-mark { padding: 6px 10px; border: 1px solid #bdd5c6; border-radius: 99px; color: #397051; font-size: .75rem; white-space: nowrap; }
+.messages { flex: 1; overflow-y: auto; padding: 25px 2px; max-height: 450px; }
+.message { padding: 12px 0; border-bottom: 1px solid #e8e1d6; }
+.message-meta { display: flex; align-items: baseline; gap: 10px; }
+.message-meta strong { color: var(--ink); }
+.message-meta time { color: var(--muted); font-size: .72rem; }
+.message p { color: var(--ink); white-space: pre-wrap; margin-top: 2px; }
+.empty-state { color: var(--muted); text-align: center; padding: 70px 0; }
+.message-form { display: flex; gap: 10px; padding-top: 18px; border-top: 1px solid var(--line); }
+.message-form input { flex: 1; }
+.message-form button { border: 0; cursor: pointer; flex-shrink: 0; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+@media (max-width: 600px) { .chat-header { align-items: flex-start; padding: 14px; } .chat-account { display: block; text-align: right; } .chat-account .text-button { display: block; margin-top: 5px; margin-left: auto; } .chat-layout { width: min(100% - 24px, 900px); padding: 28px 0; } .chat-panel { min-height: calc(100vh - 100px); padding: 22px 16px; box-shadow: 6px 6px 0 #e4ddd0; } .chat-heading { display: block; } .online-mark { display: inline-block; margin-top: 10px; } }

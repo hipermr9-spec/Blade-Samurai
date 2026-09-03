@@ -1,0 +1,17 @@
+{
+  "name": "blade-samurai-website",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Blade Samurai community website and public chat",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "express": "^4.21.2"
+  }
+}

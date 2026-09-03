@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: blade-samurai-chat
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /
+    disk:
+      name: blade-samurai-data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1
