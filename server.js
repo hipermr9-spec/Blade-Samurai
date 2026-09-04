@@ -17,7 +17,7 @@ fs.mkdirSync(uploadDirectory, { recursive: true });
 const profileUpload = multer({
 	storage: multer.diskStorage({
 		destination: uploadDirectory,
-		filename: (request, file, callback) => callback(null, `${crypto.randomUUID()}${path.extname(file.originalname).toLowerCase()}`)
+		filename: (request, file, callback) => callback(null, `${crypto.randomBytes(16).toString('hex')}${path.extname(file.originalname).toLowerCase()}`)
 	}),
 	limits: { fileSize: 5 * 1024 * 1024 },
 	fileFilter: (request, file, callback) => callback(null, file.mimetype.startsWith('image/'))
@@ -219,8 +219,9 @@ app.delete('/api/admin/messages/:id', attachUser, requireAdmin, async (request, 
 });
 
 app.use((error, request, response, next) => {
-	if (!(error instanceof multer.MulterError)) return next(error);
+	if (!(error instanceof multer.MulterError) && request.path !== '/api/profile') return next(error);
 	const message = error.code === 'LIMIT_FILE_SIZE' ? 'Image must be smaller than 5 MB.' : 'Could not upload that image.';
+	console.error('Profile upload failed:', error.message);
 	response.status(400).json({ error: message });
 });
 
