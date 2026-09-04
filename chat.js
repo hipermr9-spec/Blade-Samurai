@@ -22,10 +22,11 @@
   let newestMessageId = '';
 
   function badge(profile) {
-    if (profile?.developer) return '<img class="badge" src="img/developer-bagde.webp" alt="Developer">';
-    if (profile?.admin) return '<img class="badge" src="img/admin-badge.webp" alt="Admin">';
-    if (profile?.verified) return '<img class="badge" src="img/verified-badge.webp" alt="Verified">';
-    return '';
+    const badges = [];
+    if (profile?.developer) badges.push('<img class="badge" src="img/developer-badge.webp" alt="Developer">');
+    if (profile?.admin) badges.push('<img class="badge" src="img/admin-badge.webp" alt="Admin">');
+    if (profile?.verified) badges.push('<img class="badge" src="img/verified-badge.webp" alt="Verified">');
+    return badges.join('');
   }
 
   function validImageUrl(value) {
