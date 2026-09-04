@@ -172,6 +172,7 @@ app.get('/api/messages', attachUser, async (request, response) => {
 			return { ...message, username: userMap.get(message['user-id'])?.username || 'Deleted user', profile: userMap.get(message['user-id']) || null, mentioned };
 		}));
 	} catch (error) {
+		console.error('Messages lookup failed:', error.message);
 		response.status(500).json({ error: 'Could not load messages.' });
 	}
 });
