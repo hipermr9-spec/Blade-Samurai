@@ -187,7 +187,9 @@ app.patch('/api/profile', attachUser, profileUpload.single('profileImage'), asyn
 	} catch (error) {
 		fs.rm(request.file.path, { force: true }, () => {});
 		console.error('Profile image update failed:', error.message);
-		response.status(500).json({ error: 'Could not update your profile.' });
+		const missingProfileColumn = error.code === '42703' || error.message?.includes('profile_image');
+		const message = missingProfileColumn ? 'Profile image storage is not configured. Run supabase.sql in Supabase, then redeploy.' : 'Could not update your profile.';
+		response.status(500).json({ error: message });
 	}
 });
 
