@@ -130,7 +130,7 @@
   }
 
   async function loadMessages() {
-    const response = await apiFetch('/api/messages?limit=15');
+    const response = await apiFetch('/api/messages');
     if (response.status === 401) return window.location.assign('/login?next=/chat');
     if (!response.ok) throw new Error('Could not load messages.');
     const messages = await response.json();
@@ -144,7 +144,11 @@
     const previousHeight = messagesElement.scrollHeight;
     try {
       const response = await apiFetch(`/api/messages?limit=15&before=${encodeURIComponent(oldestMessageCreatedAt)}`);
-      if (!response.ok) return;
+      if (!response.ok) {
+        status.textContent = 'Could not load older messages.';
+        status.className = 'form-status is-error';
+        return;
+      }
       const olderMessages = await response.json();
       if (!olderMessages.length) {
         hasOlderMessages = false;
