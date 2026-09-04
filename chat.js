@@ -132,10 +132,14 @@
   async function saveProfile(event) {
     event.preventDefault();
     profileStatus.textContent = 'Saving...';
-    const response = await apiFetch('/api/profile', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ profileImage: profileImage.value }) });
+    const formData = new FormData(profileForm);
+    const response = await apiFetch('/api/profile', { method: 'PATCH', body: formData });
     const result = await response.json();
     profileStatus.textContent = response.ok ? 'Profile saved.' : result.error;
-    if (response.ok) account = { ...account, ...result };
+    if (response.ok) {
+      account = { ...account, ...result };
+      profileForm.reset();
+    }
   }
 
   async function loadAdminUsers() {
@@ -178,7 +182,6 @@
       if (!meResponse.ok) throw new Error((await meResponse.json()).error || 'The account service is unavailable.');
       account = await meResponse.json();
       currentUser.textContent = `Signed in as ${account.username}${account.admin ? ' · Admin' : ''}`;
-      profileImage.value = account.profile_image || '';
       if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
       if (account.admin) { adminPanel.hidden = false; loadAdminUsers(); }
       await loadMessages();

@@ -1,6 +1,8 @@
 const express = require('express');
 const crypto = require('crypto');
 const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
 const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
@@ -10,6 +12,16 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABAS
 const supabase = createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
 const frontendOrigin = process.env.FRONTEND_ORIGIN || 'https://blade-samurai.vercel.app';
 const sessionSecret = process.env.SESSION_SECRET || supabaseKey;
+const uploadDirectory = path.join(__dirname, 'data', 'uploads');
+fs.mkdirSync(uploadDirectory, { recursive: true });
+const profileUpload = multer({
+	storage: multer.diskStorage({
+		destination: uploadDirectory,
+		filename: (request, file, callback) => callback(null, `${crypto.randomUUID()}${path.extname(file.originalname).toLowerCase()}`)
+	}),
+	limits: { fileSize: 5 * 1024 * 1024 },
+	fileFilter: (request, file, callback) => callback(null, file.mimetype.startsWith('image/'))
+});
 
 function databaseResult(result) {
 	if (result.error) throw result.error;
@@ -83,6 +95,7 @@ app.get(['/index.html', '/login.html', '/signup.html', '/chat.html'], (request, 
 });
 
 app.use('/data', (request, response) => response.sendStatus(404));
+app.use('/uploads', express.static(uploadDirectory));
 app.use(express.static(__dirname, { extensions: ['html'] }));
 
 app.post('/api/signup', async (request, response) => {
@@ -165,9 +178,9 @@ app.post('/api/messages', attachUser, async (request, response) => {
 	}
 });
 
-app.patch('/api/profile', attachUser, async (request, response) => {
-	const profileImage = String(request.body.profileImage || '').trim();
-	if (profileImage.length > 500) return response.status(400).json({ error: 'Profile image URL is too long.' });
+app.patch('/api/profile', attachUser, profileUpload.single('profileImage'), async (request, response) => {
+	if (!request.file) return response.status(400).json({ error: 'Please choose an image to upload.' });
+	const profileImage = `${request.protocol}://${request.get('host')}/uploads/${request.file.filename}`;
 	try {
 		const user = databaseResult(await supabase.from('users').update({ profile_image: profileImage || null }).eq('user-id', request.user['user-id']).select('"user-id", username, verified, admin, developer, profile_image').single());
 		response.json(user);
@@ -200,6 +213,12 @@ app.delete('/api/admin/users/:id', attachUser, requireAdmin, async (request, res
 app.delete('/api/admin/messages/:id', attachUser, requireAdmin, async (request, response) => {
 	try { databaseResult(await supabase.from('chat').delete().eq('message_id', request.params.id)); response.status(204).end(); }
 	catch (error) { response.status(500).json({ error: 'Could not delete message.' }); }
+});
+
+app.use((error, request, response, next) => {
+	if (!(error instanceof multer.MulterError)) return next(error);
+	const message = error.code === 'LIMIT_FILE_SIZE' ? 'Image must be smaller than 5 MB.' : 'Could not upload that image.';
+	response.status(400).json({ error: message });
 });
 
 if (require.main === module) {

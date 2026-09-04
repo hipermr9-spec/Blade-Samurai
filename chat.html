@@ -29,8 +29,8 @@
     <section class="profile-panel" aria-labelledby="profile-title">
       <div><p class="eyebrow">YOUR PROFILE</p><h2 id="profile-title">Profile image</h2></div>
       <form id="profile-form" class="profile-form">
-        <label for="profile-image">Image URL</label>
-        <input id="profile-image" name="profileImage" type="url" maxlength="500" placeholder="https://...">
+        <label for="profile-image">Upload image</label>
+        <input id="profile-image" name="profileImage" type="file" accept="image/*" required>
         <button class="btn-primary" type="submit">Save profile</button>
         <p id="profile-status" class="form-status" role="alert"></p>
       </form>
