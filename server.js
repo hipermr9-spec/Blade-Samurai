@@ -1,5 +1,4 @@
 const express = require('express');
-const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
@@ -98,7 +97,7 @@ app.post('/api/signup', async (request, response) => {
 	if (existing.length) {
 		return response.status(409).json({ error: 'That username is already taken.' });
 	}
-	const user = databaseResult(await supabase.from('users').insert({ username, password: await bcrypt.hash(password, 12), verified: false, admin: false, developer: false }).select('"user-id", username').single());
+	const user = databaseResult(await supabase.from('users').insert({ username, password, verified: false, admin: false, developer: false }).select('"user-id", username').single());
 	const token = createSession(response, user['user-id']);
 	response.status(201).json({ username: user.username, token });
 });
@@ -109,7 +108,7 @@ app.post('/api/login', async (request, response) => {
 	const userResult = await supabase.from('users').select('"user-id", username, password').ilike('username', username).maybeSingle();
 	if (userResult.error) return response.status(500).json({ error: 'Could not sign in right now.' });
 	const user = userResult.data;
-	if (!user || !(await bcrypt.compare(password, user.password))) {
+	if (!user || user.password !== password) {
 		return response.status(401).json({ error: 'Incorrect username or password.' });
 	}
 	const token = createSession(response, user['user-id']);
