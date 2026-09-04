@@ -12,7 +12,7 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABAS
 const supabase = createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
 const frontendOrigin = process.env.FRONTEND_ORIGIN || 'https://blade-samurai.vercel.app';
 const sessionSecret = process.env.SESSION_SECRET || supabaseKey;
-const uploadDirectory = path.join(__dirname, 'data', 'uploads');
+const uploadDirectory = path.join(__dirname, 'img', 'profiles');
 fs.mkdirSync(uploadDirectory, { recursive: true });
 const profileUpload = multer({
 	storage: multer.diskStorage({
@@ -95,7 +95,6 @@ app.get(['/index.html', '/login.html', '/signup.html', '/chat.html'], (request, 
 });
 
 app.use('/data', (request, response) => response.sendStatus(404));
-app.use('/uploads', express.static(uploadDirectory));
 app.use(express.static(__dirname, { extensions: ['html'] }));
 
 app.post('/api/signup', async (request, response) => {
@@ -180,7 +179,7 @@ app.post('/api/messages', attachUser, async (request, response) => {
 
 app.patch('/api/profile', attachUser, profileUpload.single('profileImage'), async (request, response) => {
 	if (!request.file) return response.status(400).json({ error: 'Please choose an image to upload.' });
-	const profileImage = `${request.protocol}://${request.get('host')}/uploads/${request.file.filename}`;
+	const profileImage = `${request.protocol}://${request.get('host')}/img/profiles/${request.file.filename}`;
 	try {
 		const user = databaseResult(await supabase.from('users').update({ profile_image: profileImage || null }).eq('user-id', request.user['user-id']).select('"user-id", username, verified, admin, developer, profile_image').single());
 		response.json(user);
