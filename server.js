@@ -185,6 +185,8 @@ app.patch('/api/profile', attachUser, profileUpload.single('profileImage'), asyn
 		const user = databaseResult(await supabase.from('users').update({ profile_image: profileImage || null }).eq('user-id', request.user['user-id']).select('"user-id", username, verified, admin, developer, profile_image').single());
 		response.json(user);
 	} catch (error) {
+		fs.rm(request.file.path, { force: true }, () => {});
+		console.error('Profile image update failed:', error.message);
 		response.status(500).json({ error: 'Could not update your profile.' });
 	}
 });

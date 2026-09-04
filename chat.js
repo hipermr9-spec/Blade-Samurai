@@ -132,13 +132,17 @@
   async function saveProfile(event) {
     event.preventDefault();
     profileStatus.textContent = 'Saving...';
-    const formData = new FormData(profileForm);
-    const response = await apiFetch('/api/profile', { method: 'PATCH', body: formData });
-    const result = await response.json();
-    profileStatus.textContent = response.ok ? 'Profile saved.' : result.error;
-    if (response.ok) {
+    try {
+      const formData = new FormData(profileForm);
+      const response = await apiFetch('/api/profile', { method: 'PATCH', body: formData });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Could not save profile.');
+      profileStatus.textContent = 'Profile saved.';
       account = { ...account, ...result };
       profileForm.reset();
+    } catch (error) {
+      profileStatus.textContent = error.message;
+      profileStatus.className = 'form-status is-error';
     }
   }
 
