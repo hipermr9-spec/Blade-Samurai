@@ -3,6 +3,14 @@
   const status = document.getElementById('form-status');
   if (!form) return;
 
+  async function readJson(response) {
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      throw new Error(`Server returned ${response.status}. Please try again.`);
+    }
+    return response.json();
+  }
+
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     status.textContent = 'Working...';
@@ -11,7 +19,7 @@
     const body = Object.fromEntries(new FormData(form));
     try {
       const response = await fetch(endpoint, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      const result = await response.json();
+      const result = await readJson(response);
       if (!response.ok) throw new Error(result.error || 'Something went wrong.');
       if (result.token) localStorage.setItem('blade-samurai-session', result.token);
       const next = new URLSearchParams(window.location.search).get('next') || '/chat';
