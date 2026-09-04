@@ -181,14 +181,15 @@ app.patch('/api/profile', attachUser, profileUpload.single('profileImage'), asyn
 	if (!request.file) return response.status(400).json({ error: 'Please choose an image to upload.' });
 	const profileImage = `${request.protocol}://${request.get('host')}/img/profiles/${request.file.filename}`;
 	try {
-		const user = databaseResult(await supabase.from('users').update({ profile_image: profileImage || null }).eq('user-id', request.user['user-id']).select('"user-id", username, verified, admin, developer, profile_image').single());
-		response.json(user);
+		const update = await supabase.from('users').update({ profile_image: profileImage }).eq('user-id', request.user['user-id']);
+		databaseResult(update);
+		response.json({ ...request.user, profile_image: profileImage });
 	} catch (error) {
 		fs.rm(request.file.path, { force: true }, () => {});
 		console.error('Profile image update failed:', error.message);
 		const missingProfileColumn = error.code === '42703' || error.message?.includes('profile_image');
 		const message = missingProfileColumn ? 'Profile image storage is not configured. Run supabase.sql in Supabase, then redeploy.' : 'Could not update your profile.';
-		response.status(500).json({ error: message });
+		response.status(500).json({ error: message, code: error.code || 'PROFILE_UPDATE_FAILED' });
 	}
 });
 
