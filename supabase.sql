@@ -1,6 +1,10 @@
 -- Run in the Supabase SQL editor.
 -- The quoted "user-id" names match the existing schema.
 
+insert into storage.buckets (id, name, public)
+values ('profiles', 'profiles', true)
+on conflict (id) do update set public = true;
+
 alter table public.users
   add column if not exists email text,
   add column if not exists profile_image text,

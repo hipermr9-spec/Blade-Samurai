@@ -1,7 +1,6 @@
 const express = require('express');
 const crypto = require('crypto');
 const path = require('path');
-const fs = require('fs');
 const multer = require('multer');
 const { createClient } = require('@supabase/supabase-js');
 
@@ -12,13 +11,8 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABAS
 const supabase = createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
 const frontendOrigin = process.env.FRONTEND_ORIGIN || 'https://blade-samurai.vercel.app';
 const sessionSecret = process.env.SESSION_SECRET || supabaseKey;
-const uploadDirectory = path.join(__dirname, 'img', 'profiles');
-fs.mkdirSync(uploadDirectory, { recursive: true });
 const profileUpload = multer({
-	storage: multer.diskStorage({
-		destination: uploadDirectory,
-		filename: (request, file, callback) => callback(null, `${crypto.randomBytes(16).toString('hex')}${path.extname(file.originalname).toLowerCase()}`)
-	}),
+	storage: multer.memoryStorage(),
 	limits: { fileSize: 5 * 1024 * 1024 },
 	fileFilter: (request, file, callback) => callback(null, file.mimetype.startsWith('image/'))
 });
@@ -190,13 +184,19 @@ app.post('/api/messages', attachUser, async (request, response) => {
 
 app.patch('/api/profile', attachUser, profileUpload.single('profileImage'), async (request, response) => {
 	if (!request.file) return response.status(400).json({ error: 'Please choose an image to upload.' });
-	const profileImage = `${request.protocol}://${request.get('host')}/img/profiles/${request.file.filename}`;
+	const filePath = `${request.user['user-id']}/${crypto.randomBytes(16).toString('hex')}${path.extname(request.file.originalname).toLowerCase()}`;
 	try {
+		const upload = await supabase.storage.from('profiles').upload(filePath, request.file.buffer, {
+			contentType: request.file.mimetype,
+			upsert: false
+		});
+		databaseResult(upload);
+		const { data } = supabase.storage.from('profiles').getPublicUrl(filePath);
+		const profileImage = data.publicUrl;
 		const update = await supabase.from('users').update({ profile_image: profileImage }).eq('user-id', request.user['user-id']);
 		databaseResult(update);
 		response.json({ ...request.user, profile_image: profileImage });
 	} catch (error) {
-		fs.rm(request.file.path, { force: true }, () => {});
 		console.error('Profile image update failed:', error.message);
 		const missingProfileColumn = error.code === '42703' || error.message?.includes('profile_image');
 		const message = missingProfileColumn ? 'Profile image storage is not configured. Run supabase.sql in Supabase, then redeploy.' : 'Could not update your profile.';
