@@ -22,6 +22,8 @@
       <form id="signup-form" class="auth-form">
         <label for="username">Username</label>
         <input id="username" name="username" type="text" autocomplete="username" required minlength="3" maxlength="20" pattern="[a-zA-Z0-9_]+">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" autocomplete="email" required maxlength="254">
         <label for="password">Password</label>
         <input id="password" name="password" type="password" autocomplete="new-password" required minlength="8">
         <button class="btn-primary auth-submit" type="submit">Create account</button>

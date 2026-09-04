@@ -99,9 +99,13 @@ app.use(express.static(__dirname, { extensions: ['html'] }));
 
 app.post('/api/signup', async (request, response) => {
 	const username = String(request.body.username || '').trim();
+	const email = String(request.body.email || '').trim().toLowerCase();
 	const password = String(request.body.password || '');
 	if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
 		return response.status(400).json({ error: 'Username must be 3-20 letters, numbers, or underscores.' });
+	}
+	if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+		return response.status(400).json({ error: 'Please enter a valid email address.' });
 	}
 	if (password.length < 8) return response.status(400).json({ error: 'Password must be at least 8 characters.' });
 
@@ -109,19 +113,26 @@ app.post('/api/signup', async (request, response) => {
 	if (existing.length) {
 		return response.status(409).json({ error: 'That username is already taken.' });
 	}
-	const user = databaseResult(await supabase.from('users').insert({ username, password, verified: false, admin: false, developer: false }).select('"user-id", username').single());
+	const existingEmail = databaseResult(await supabase.from('users').select('"user-id"').ilike('email', email));
+	if (existingEmail.length) {
+		return response.status(409).json({ error: 'That email is already registered.' });
+	}
+	const user = databaseResult(await supabase.from('users').insert({ username, email, password, verified: false, admin: false, developer: false }).select('"user-id", username').single());
 	const token = createSession(response, user['user-id']);
 	response.status(201).json({ username: user.username, token });
 });
 
 app.post('/api/login', async (request, response) => {
-	const username = String(request.body.username || '').trim();
+	const email = String(request.body.email || '').trim().toLowerCase();
 	const password = String(request.body.password || '');
-	const userResult = await supabase.from('users').select('"user-id", username, password').ilike('username', username).maybeSingle();
+	if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+		return response.status(400).json({ error: 'Please enter a valid email address.' });
+	}
+	const userResult = await supabase.from('users').select('"user-id", username, password').ilike('email', email).maybeSingle();
 	if (userResult.error) return response.status(500).json({ error: 'Could not sign in right now.' });
 	const user = userResult.data;
 	if (!user || user.password !== password) {
-		return response.status(401).json({ error: 'Incorrect username or password.' });
+		return response.status(401).json({ error: 'Incorrect email or password.' });
 	}
 	const token = createSession(response, user['user-id']);
 	response.json({ username: user.username, token });
