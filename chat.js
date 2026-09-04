@@ -20,6 +20,10 @@
   const closeProfileDialog = document.getElementById('close-profile-dialog');
   let account;
   let newestMessageId = '';
+  let newestMessageCreatedAt = '';
+  let oldestMessageCreatedAt = '';
+  let hasOlderMessages = true;
+  let loadingOlderMessages = false;
 
   function badge(profile) {
     const badges = [];
@@ -71,14 +75,10 @@
     profileDialog.showModal();
   }
 
-  function renderMessages(messages) {
-    if (!messages.length) {
-      messagesElement.innerHTML = '<p class="empty-state">No messages yet. Start the conversation.</p>';
-      return;
-    }
-    messagesElement.replaceChildren(...messages.map((message) => {
+  function createMessageElement(message) {
       const item = document.createElement('article');
       item.className = 'message';
+      item.dataset.messageId = message.message_id;
       const meta = document.createElement('div');
       meta.className = 'message-meta';
       const author = document.createElement('button');
@@ -115,18 +115,65 @@
         meta.append(deleteButton);
       }
       return item;
-    }));
-    if (messages.at(-1)?.message_id !== newestMessageId) {
-      newestMessageId = messages.at(-1)?.message_id || '';
-      messagesElement.scrollTop = messagesElement.scrollHeight;
+  }
+
+  function renderMessages(messages, shouldScroll = false) {
+    if (!messages.length) {
+      messagesElement.innerHTML = '<p class="empty-state">No messages yet. Start the conversation.</p>';
+      return;
     }
+    messagesElement.replaceChildren(...messages.map(createMessageElement));
+    newestMessageId = messages.at(-1)?.message_id || '';
+    newestMessageCreatedAt = messages.at(-1)?.created_at || '';
+    oldestMessageCreatedAt = messages[0]?.created_at || '';
+    if (shouldScroll) messagesElement.scrollTop = messagesElement.scrollHeight;
   }
 
   async function loadMessages() {
-    const response = await apiFetch('/api/messages');
+    const response = await apiFetch('/api/messages?limit=15');
     if (response.status === 401) return window.location.assign('/login?next=/chat');
     if (!response.ok) throw new Error('Could not load messages.');
-    renderMessages(await response.json());
+    const messages = await response.json();
+    hasOlderMessages = messages.length === 15;
+    renderMessages(messages, true);
+  }
+
+  async function loadOlderMessages() {
+    if (loadingOlderMessages || !hasOlderMessages || !oldestMessageCreatedAt) return;
+    loadingOlderMessages = true;
+    const previousHeight = messagesElement.scrollHeight;
+    try {
+      const response = await apiFetch(`/api/messages?limit=15&before=${encodeURIComponent(oldestMessageCreatedAt)}`);
+      if (!response.ok) return;
+      const olderMessages = await response.json();
+      if (!olderMessages.length) {
+        hasOlderMessages = false;
+        return;
+      }
+      const existingMessages = [...messagesElement.querySelectorAll('.message')];
+      const existingIds = new Set(existingMessages.map((element) => element.dataset.messageId));
+      const messages = olderMessages.filter((message) => !existingIds.has(message.message_id));
+      messagesElement.replaceChildren(...messages.map(createMessageElement), ...existingMessages);
+      oldestMessageCreatedAt = messages[0]?.created_at || oldestMessageCreatedAt;
+      hasOlderMessages = olderMessages.length === 15;
+      messagesElement.scrollTop += messagesElement.scrollHeight - previousHeight;
+    } finally {
+      loadingOlderMessages = false;
+    }
+  }
+
+  async function loadNewMessages() {
+    if (!newestMessageCreatedAt) return loadMessages();
+    const response = await apiFetch(`/api/messages?limit=100&after=${encodeURIComponent(newestMessageCreatedAt)}`);
+    if (!response.ok) return;
+    const newMessages = await response.json();
+    if (!newMessages.length) return;
+    const wasAtBottom = messagesElement.scrollHeight - messagesElement.scrollTop - messagesElement.clientHeight < 24;
+    const existingMessages = [...messagesElement.querySelectorAll('.message')];
+    messagesElement.replaceChildren(...existingMessages, ...newMessages.map(createMessageElement));
+    newestMessageId = newMessages.at(-1).message_id;
+    newestMessageCreatedAt = newMessages.at(-1).created_at;
+    if (wasAtBottom) messagesElement.scrollTop = messagesElement.scrollHeight;
   }
 
   async function saveProfile(event) {
@@ -189,7 +236,7 @@
       if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
       if (account.admin) { adminPanel.hidden = false; loadAdminUsers(); }
       await loadMessages();
-      window.setInterval(() => loadMessages().catch(() => {}), 5000);
+      window.setInterval(() => loadNewMessages().catch(() => {}), 5000);
     } catch (error) {
       status.textContent = error.message;
       status.className = 'form-status is-error';
@@ -213,6 +260,9 @@
     input.focus();
   });
   profileForm.addEventListener('submit', saveProfile);
+  messagesElement.addEventListener('scroll', () => {
+    if (messagesElement.scrollTop <= 40) loadOlderMessages().catch(() => {});
+  });
   document.getElementById('refresh-admin').addEventListener('click', loadAdminUsers);
   closeProfileDialog.addEventListener('click', () => profileDialog.close());
   profileDialog.addEventListener('click', (event) => {

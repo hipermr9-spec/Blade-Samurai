@@ -151,7 +151,14 @@ app.get('/api/me', attachUser, (request, response) => response.json(request.user
 
 app.get('/api/messages', attachUser, async (request, response) => {
 	try {
-		const messages = databaseResult(await supabase.from('chat').select('message_id, created_at, content, "user-id", badges').order('created_at', { ascending: true }).limit(request.user.admin ? 1000 : 100));
+		const limit = Math.min(Math.max(Number.parseInt(request.query.limit, 10) || 15, 1), 100);
+		const before = request.query.before ? String(request.query.before) : '';
+		const after = request.query.after ? String(request.query.after) : '';
+		let messagesQuery = supabase.from('chat').select('message_id, created_at, content, "user-id", badges');
+		if (before) messagesQuery = messagesQuery.lt('created_at', before);
+		if (after) messagesQuery = messagesQuery.gt('created_at', after);
+		const messages = databaseResult(await messagesQuery.order('created_at', { ascending: Boolean(after) }).limit(limit));
+		if (!after) messages.reverse();
 		const userIds = [...new Set(messages.map((message) => message['user-id']).filter(Boolean))];
 		const users = userIds.length ? databaseResult(await supabase.from('users').select('"user-id", username, verified, admin, developer').in('user-id', userIds)) : [];
 		for (const user of users) {
